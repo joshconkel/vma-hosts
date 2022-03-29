@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  jira:
+    depends_on:
+      - postgresql
+    image: teamatldocker/jira
+    restart: unless-stopped
+    container_name: jira
+    hostname: 'jira.conkelhomelab.net'
+    volumes:
+      - jiradata:/var/atlassian/jira
+    expose:
+      - 8080
+    environment:
+      VIRTUAL_HOST: 'jira.conkelhomelab.net'
+      LETSENCRYPT_HOST: 'jira.conkelhomelab.net'
+      LETSENCRYPT_EMAIL: 'josh@conkel.net'
+      JIRA_DATABASE_URL: 'postgresql://jira@postgresql/jiradb'
+      JIRA_DB_PASSWORD: 'fxC#7fR3e^H@@7gq'
+      SETENV_JVM_MINIMUM_MEMORY: '2048m'
+      SETENV_JVM_MAXIMUM_MEMORY: '4096m'
+      JIRA_PROXY_NAME: 'jira.conkelhomelab.net'
+      JIRA_PROXY_PORT: '443'
+      JIRA_PROXY_SCHEME: 'https'
+    logging:
+      # limit logs retained on host to 25MB
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+
+  postgresql:
+    image: postgres:9.5-alpine
+    restart: unless-stopped
+    volumes:
+      - postgresqldata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: 'jira'
+      # CHANGE THE PASSWORD!
+      POSTGRES_PASSWORD: 'fxC#7fR3e^H@@7gq'
+      POSTGRES_DB: 'jiradb'
+      POSTGRES_ENCODING: 'UNICODE'
+      POSTGRES_COLLATE: 'C'
+      POSTGRES_COLLATE_TYPE: 'C'
+    logging:
+      # limit logs retained on host to 25MB
+      driver: "json-file"
+      options:
+        max-size: "500k"
+        max-file: "50"
+
+volumes:
+  jiradata:
+    external: false
+  postgresqldata:
+    external: false
+
+networks:
+    default:
+        external:
+            name: nginx-proxy
+
